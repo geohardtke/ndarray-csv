@@ -184,7 +184,6 @@ impl<'a, W: Write> Array2Writer for &'a mut Writer<W> {
         Ok(())
     }
 }
-}
 
 #[cfg(test)]
 mod tests {
