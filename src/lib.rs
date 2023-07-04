@@ -177,32 +177,13 @@ pub trait Array2Writer {
 
 impl<'a, W: Write> Array2Writer for &'a mut Writer<W> {
     fn serialize_array2<A: Serialize>(self, array: &Array2<A>) -> Result<(), csv::Error> {
-        /// This wraps the iterator for a row so that we can implement Serialize.
-        ///
-        /// Serialize is not implemented for iterators: https://github.com/serde-rs/serde/issues/571
-        ///
-        /// This solution from Hyeonu wraps the iterator:
-        /// https://users.rust-lang.org/t/how-to-serialize-an-iterator-to-json/59272/3
-        struct Row1DIter<'b, B>(Cell<Option<Iter<'b, B, Dim<[usize; 1]>>>>);
-
-        impl<'b, B> Serialize for Row1DIter<'b, B>
-        where
-            B: Serialize,
-        {
-            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: Serializer,
-            {
-                serializer.collect_seq(self.0.take().unwrap())
-            }
-        }
-
         for row in array.outer_iter() {
-            self.serialize(Row1DIter(Cell::new(Some(row.iter()))))?;
+            self.serialize(row.as_slice())?;
         }
         self.flush()?;
         Ok(())
     }
+}
 }
 
 #[cfg(test)]
